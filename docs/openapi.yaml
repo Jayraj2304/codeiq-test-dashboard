@@ -1,0 +1,204 @@
+openapi: 3.0.3
+info:
+  title: Task Management API
+  description: Production-ready REST API for task management
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@example.com
+
+servers:
+  - url: http://localhost:3000
+    description: Development
+
+paths:
+  /api/auth/register:
+    post:
+      tags: [Auth]
+      summary: Register new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password, name]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  minLength: 8
+                name:
+                  type: string
+      responses:
+        201:
+          description: User created
+        400:
+          description: Validation error
+        409:
+          description: Email already exists
+
+  /api/auth/login:
+    post:
+      tags: [Auth]
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        200:
+          description: Login successful
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+        401:
+          description: Invalid credentials
+
+  /api/tasks:
+    get:
+      tags: [Tasks]
+      summary: List tasks
+      parameters:
+        - name: query
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [todo, in_progress, review, done]
+        - name: priority
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [low, medium, high, critical]
+        - name: projectId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+      responses:
+        200:
+          description: Task list
+
+  /api/search/tasks:
+    get:
+      tags: [Search]
+      summary: Advanced task search
+      parameters:
+        - name: query
+          in: query
+          schema:
+            type: string
+        - name: tags
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+        - name: createdAfter
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: createdBefore
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: dueAfter
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: dueBefore
+          in: query
+          schema:
+            type: string
+            format: date-time
+      responses:
+        200:
+          description: Search results
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Task:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [todo, in_progress, review, done]
+        priority:
+          type: string
+          enum: [low, medium, high, critical]
+        assigneeId:
+          type: string
+          format: uuid
+        projectId:
+          type: string
+          format: uuid
+        tags:
+          type: array
+          items:
+            type: string
+        estimatedHours:
+          type: number
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+
+security:
+  - bearerAuth: []
